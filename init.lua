@@ -8,8 +8,6 @@ local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
 local rawset, concat = rawset, table.concat
 
-local debug = debug
-
 module 'ophal.modules.shorten'
 
 local user_is_logged_in, db_query
