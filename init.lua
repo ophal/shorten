@@ -10,10 +10,10 @@ local rawset, concat = rawset, table.concat
 
 module 'ophal.modules.shorten'
 
-local user_is_logged_in, db_query
+local user, db_query
 
 function init()
-  user_is_logged_in = modules.user.user_is_logged_in
+  user = modules.user
   db_query = env.db_query
   redirect()
 end
@@ -67,7 +67,7 @@ end
 function shorten_service()
   local params, pos, err, data, output, short_path
 
-  if not user_is_logged_in() then
+  if not user.is_logged_in() then
     header('status', 404)
   else
     header('content-type', 'application/json; charset=utf-8')
@@ -147,7 +147,7 @@ function new()
 end
 
 function page()
-  if not user_is_logged_in() then
+  if not user.is_logged_in() then
     goto 'user/login'
   end
 
