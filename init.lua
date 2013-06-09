@@ -7,6 +7,7 @@ local exit_ophal, print, format_date = exit_ophal, print, format_date
 local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
 local rawset, concat, int2strmap = rawset, table.concat, seawolf.text.int2strmap
+local str2intmap = seawolf.text.str2intmap
 
 module 'ophal.modules.shorten'
 
@@ -22,7 +23,7 @@ function redirect()
   local data, rs, err, date_format
 
   if empty(arg(1)) and not empty(arg(0)) then
-    rs, err = db_query('SELECT long FROM shorten_urls WHERE short = ?', arg(0))
+    rs, err = db_query('SELECT long FROM shorten_urls WHERE id = ?', str2intmap(arg(0)))
 
     if not err then
       data = rs:fetch(true)
@@ -89,8 +90,8 @@ function shorten_service()
         else
           short_path = new()
           rs, err = db_query(
-            'INSERT INTO shorten_urls(user_id, long, short, active, created) VALUES(?, ?, ?, ?, ?)',
-            _SESSION.user.id, str_replace({'\n', '\r'}, '', params.url), short_path, 1, time()
+            'INSERT INTO shorten_urls(user_id, long, active, created) VALUES(?, ?, ?, ?)',
+            _SESSION.user.id, str_replace({'\n', '\r'}, '', params.url), 1, time()
           )
           if err then
             error(err)
@@ -109,7 +110,7 @@ end
 
 function new()
   local rs, err, last_id, id
-  rs, err  = db_query 'SELECT id from shorten_urls ORDER BY id DESC LIMIT 0,1'
+  rs, err  = db_query 'SELECT seq FROM SQLITE_SEQUENCE WHERE name = "shorten_urls"'
   if err then
     error(err)
   else
@@ -117,7 +118,7 @@ function new()
     if empty(last_id) then
       id = 1
     else
-      id = last_id.id + 1
+      id = last_id.seq + 1
     end
 
     return int2strmap(id)
