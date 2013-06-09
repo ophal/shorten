@@ -6,7 +6,7 @@ local exit, arg, str_replace = os.exit, arg, seawolf.text.str_replace
 local exit_ophal, print, format_date = exit_ophal, print, format_date
 local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
-local rawset, concat = rawset, table.concat
+local rawset, concat, int2strmap = rawset, table.concat, seawolf.text.int2strmap
 
 module 'ophal.modules.shorten'
 
@@ -107,28 +107,6 @@ function shorten_service()
   theme.html = function () return output or '' end
 end
 
---[[
-  Convert given integer to alphanumeric (numbers + lower case + upper case)
-
-  Copied and adapted from http://lua-users.org/lists/lua-l/2004-09/msg00054.html
-]]
-function int2alphanum(IN)
-  local map = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  local buffer, OUT, i, d = {}, {}, 0
-  local b = map:len()
-  while IN > 0 do
-    i = i + 1
-    IN, d = math.floor(IN/b), math.mod(IN, b) + 1
-    rawset(buffer, i, string.sub(map, d, d))
-  end
-  while i > 0 do
-    rawset(OUT, #OUT + 1, buffer[i])
-    i = i - 1
-  end
-  return tconcat(OUT, '')
-end
-
-
 function new()
   local rs, err, last_id, id
   rs, err  = db_query 'SELECT id from shorten_urls ORDER BY id DESC LIMIT 0,1'
@@ -142,7 +120,7 @@ function new()
       id = last_id.id + 1
     end
 
-    return int2alphanum(id)
+    return int2strmap(id)
   end
 end
 
