@@ -86,7 +86,7 @@ function shorten_service()
       else
         data = rs:fetch(true)
         if not empty(data) then
-          short_path = data.short
+          short_path = int2strmap(data.id)
         else
           short_path = new()
           rs, err = db_query(
