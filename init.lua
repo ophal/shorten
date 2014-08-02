@@ -1,5 +1,6 @@
+local seawolf = require 'seawolf'.__build('variable', 'text')
 local tconcat, theme, add_js, goto, url = table.concat, theme, add_js, goto, url
-local modules, header, read, type = ophal.modules, header, io.read, type
+local modules, header, type = ophal.modules, header, type
 local empty, env, time, error = seawolf.variable.empty, env, os.time, error
 local json, _SESSION, exit_ophal = require 'dkjson', _SESSION, exit_ophal
 local exit, route_arg, str_replace = os.exit, route_arg, seawolf.text.str_replace
@@ -7,14 +8,14 @@ local exit_ophal, print, format_date = exit_ophal, print, format_date
 local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
 local rawset, concat, int2strmap = rawset, table.concat, seawolf.text.int2strmap
-local str2intmap = seawolf.text.str2intmap
+local str2intmap, request_get_body = seawolf.text.str2intmap, request_get_body
 
 module 'ophal.modules.shorten'
 
 local user, db_query
 
 function init()
-  user = modules.user
+  user_mod = modules.user
   db_query = env.db_query
   redirect()
 end
@@ -58,6 +59,8 @@ function route()
 
   items.shorten = {
     page_callback = 'shorten_service',
+    access_callback = {module = 'user', 'access', 'create short urls'},
+    format = 'json',
   }
 
   items['shorten/wizard'] = {
@@ -68,46 +71,40 @@ function route()
 end
 
 function shorten_service()
-  local params, pos, err, data, output, short_path
+  local parsed, pos, err, data, output, short_path, input, account
 
-  if not user.is_logged_in() then
-    header('status', 404)
-  else
-    header('content-type', 'application/json; charset=utf-8')
+  input = request_get_body()
+  output = {success = false}
 
-    output = {success = false}
-    params, pos, err = json.decode(read '*a', 1, nil)
+  parsed, pos, err = json.decode(input, 1, nil)
+  if err then
+    error(err)
+  elseif
+    'table' == type(parsed) and not empty(parsed.url)
+  then
+    rs, err = db_query('SELECT * FROM shorten_urls WHERE long = ?', parsed.url)
     if err then
       error(err)
-    elseif
-      'table' == type(params) and not empty(params.url)
-    then
-      rs, err = db_query('SELECT * FROM shorten_urls WHERE long = ?', params.url)
-      if err then
-        error(err)
+    else
+      data = rs:fetch(true)
+      if not empty(data) then
+        short_path = int2strmap(data.id)
       else
-        data = rs:fetch(true)
-        if not empty(data) then
-          short_path = int2strmap(data.id)
-        else
-          short_path = new()
-          rs, err = db_query(
-            'INSERT INTO shorten_urls(user_id, long, active, created) VALUES(?, ?, ?, ?)',
-            _SESSION.user.id, str_replace({'\n', '\r'}, '', params.url), 1, time()
-          )
-          if err then
-            error(err)
-          end
+        short_path = new()
+        rs, err = db_query(
+          'INSERT INTO shorten_urls(user_id, long, active, created) VALUES(?, ?, ?, ?)',
+          user_mod.current().id, str_replace({'\n', '\r'}, '', parsed.url), 1, time()
+        )
+        if err then
+          error(err)
         end
-        output.short = url(short_path, {absolute = true})
-        output.success = true
       end
+      output.short = url(short_path, {absolute = true})
+      output.success = true
     end
-
-    output = json.encode(output)
   end
 
-  theme.html = function () return output or '' end
+  return output
 end
 
 function new()
@@ -128,7 +125,7 @@ function new()
 end
 
 function page()
-  if not user.is_logged_in() then
+  if not user_mod.is_logged_in() then
     goto 'user/login'
   end
 
