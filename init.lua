@@ -2,7 +2,7 @@ local tconcat, theme, add_js, goto, url = table.concat, theme, add_js, goto, url
 local modules, header, read, type = ophal.modules, header, io.read, type
 local empty, env, time, error = seawolf.variable.empty, env, os.time, error
 local json, _SESSION, exit_ophal = require 'dkjson', _SESSION, exit_ophal
-local exit, arg, str_replace = os.exit, arg, seawolf.text.str_replace
+local exit, route_arg, str_replace = os.exit, route_arg, seawolf.text.str_replace
 local exit_ophal, print, format_date = exit_ophal, print, format_date
 local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
@@ -22,8 +22,8 @@ end
 function redirect()
   local data, rs, err, date_format
 
-  if empty(arg(1)) and not empty(arg(0)) then
-    rs, err = db_query('SELECT long FROM shorten_urls WHERE id = ?', str2intmap(arg(0)))
+  if empty(route_arg(1)) and not empty(route_arg(0)) then
+    rs, err = db_query('SELECT long FROM shorten_urls WHERE id = ?', str2intmap(route_arg(0)))
 
     if not err then
       data = rs:fetch(true)
@@ -51,7 +51,9 @@ connection: close
   end
 end
 
-function menu()
+--[[ Implements hook route().
+]]
+function route()
   items = {}
 
   items.shorten = {
