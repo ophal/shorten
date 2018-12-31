@@ -18,6 +18,9 @@ local user_mod, db_query
 --[[ Implements hook init().
 ]]
 function init()
+  if 'cron.cgi' == route_arg(0) then
+    return
+  end
   user_mod = modules.user
   db_query = env.db_query
   redirect()
