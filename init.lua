@@ -1,19 +1,22 @@
-local seawolf = require 'seawolf'.__build('variable', 'text')
+local sw_var = require 'seawolf.variable'
+local sw_txt = require 'seawolf.text'
 local tconcat, theme, add_js, goto, url = table.concat, theme, add_js, goto, url
 local modules, header, type = ophal.modules, header, type
-local empty, env, time, error = seawolf.variable.empty, env, os.time, error
+local empty, env, time, error = sw_var.empty, env, os.time, error
 local json, _SESSION, exit_ophal = require 'dkjson', _SESSION, exit_ophal
-local exit, route_arg, str_replace = os.exit, route_arg, seawolf.text.str_replace
+local exit, route_arg, str_replace = os.exit, route_arg, sw_txt.str_replace
 local exit_ophal, print, format_date = exit_ophal, print, format_date
 local io_write, os_exit, version = io_write, os_exit, ophal.version
 local session_write_close, string, math = session_write_close, string, math
-local rawset, concat, int2strmap = rawset, table.concat, seawolf.text.int2strmap
-local str2intmap, request_get_body = seawolf.text.str2intmap, request_get_body
+local rawset, concat, int2strmap = rawset, table.concat, sw_txt.int2strmap
+local str2intmap, request_get_body = sw_txt.str2intmap, request_get_body
 
 module 'ophal.modules.shorten'
 
-local user, db_query
+local user_mod, db_query
 
+--[[ Implements hook init().
+]]
 function init()
   user_mod = modules.user
   db_query = env.db_query
@@ -55,7 +58,7 @@ end
 --[[ Implements hook route().
 ]]
 function route()
-  items = {}
+  local items = {}
 
   items.shorten = {
     page_callback = 'shorten_service',
